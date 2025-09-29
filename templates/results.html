@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing Results - Display Tracking</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Processing Results</h1>
+            <p>Week {{ week_num }} Display Tracking Results</p>
+            <a href="{{ url_for('dashboard') }}" class="btn btn--outline">← Back to Dashboard</a>
+        </header>
+
+        {% if result and result.success %}
+        <!-- Summary Statistics -->
+        <section class="dashboard-section">
+            <h2>Summary Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ result.summary.models_increased + result.summary.models_decreased + (result.summary.models_unchanged or 0) }}</div>
+                    <div class="stat-label">Total Models</div>
+                </div>
+                <div class="stat-card stat-card--success">
+                    <div class="stat-value">{{ result.summary.models_increased }}</div>
+                    <div class="stat-label">Models Increased</div>
+                </div>
+                <div class="stat-card stat-card--error">
+                    <div class="stat-value">{{ result.summary.models_decreased }}</div>
+                    <div class="stat-label">Models Decreased</div>
+                </div>
+                <div class="stat-card stat-card--info">
+                    <div class="stat-value">{{ result.summary.total_changes }}</div>
+                    <div class="stat-label">Total Changes</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-section">
+            <h2>Visual Charts</h2>
+            <div class="chart-container">
+                {% if result.charts.increases %}
+                <div class="chart-item">
+                    <h3>Top Models with Largest Increases</h3>
+                    <img src="{{ url_for('serve_chart', chart_type='increases', filename=result.charts.increases.split('/')[-1]) }}"
+                         alt="Top Models with Largest Increases" class="chart-image">
+                    <a href="{{ url_for('download_file', filename=result.charts.increases.split('/')[-1]) }}"
+                       class="btn btn--secondary">Download Chart</a>
+                </div>
+                {% endif %}
+
+                {% if result.charts.decreases %}
+                <div class="chart-item">
+                    <h3>Top Models with Largest Decreases</h3>
+                    <img src="{{ url_for('serve_chart', chart_type='decreases', filename=result.charts.decreases.split('/')[-1]) }}"
+                         alt="Top Models with Largest Decreases" class="chart-image">
+                    <a href="{{ url_for('download_file', filename=result.charts.decreases.split('/')[-1]) }}"
+                       class="btn btn--secondary">Download Chart</a>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Download Section -->
+        <section class="download-section">
+            <h2>Download Reports</h2>
+            <div class="download-grid">
+                <div class="download-card">
+                    <div class="download-icon">📄</div>
+                    <h3>Updated Weekly Report</h3>
+                    <p>Download the merged CSV report for Week {{ week_num }}</p>
+                    <a href="{{ url_for('download_file', filename=result.report_file) }}"
+                       download="{{ result.report_file }}"
+                       class="btn btn--primary">
+                        Download CSV
+                    </a>
+                </div>
+
+                <div class="download-card">
+                    <div class="download-icon">⚠️</div>
+                    <h3>Alerts Summary</h3>
+                    <p>Download detailed alerts and changes in JSON format</p>
+                    <a href="{{ url_for('download_file', filename=result.alert_file) }}"
+                       download="{{ result.alert_file }}"
+                       class="btn btn--primary">
+                        Download JSON
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Processing Details -->
+        <section class="details-section">
+            <h2>Processing Details</h2>
+            <div class="details-grid">
+                <div class="detail-item">
+                    <strong>Job ID:</strong> {{ job_id }}
+                </div>
+                <div class="detail-item">
+                    <strong>Week Number:</strong> {{ week_num }}
+                </div>
+                <div class="detail-item">
+                    <strong>Models Increased:</strong> {{ result.summary.models_increased }}
+                </div>
+                <div class="detail-item">
+                    <strong>Models Decreased:</strong> {{ result.summary.models_decreased }}
+                </div>
+                <div class="detail-item">
+                    <strong>Total Changes:</strong> {{ result.summary.total_changes }}
+                </div>
+            </div>
+        </section>
+
+        {% else %}
+        <!-- Error State -->
+        <section class="error-section">
+            <h2>Processing Failed</h2>
+            <div class="error-message">
+                <p>An error occurred during processing. Please try again or contact support.</p>
+                {% if result and result.error %}
+                <details>
+                    <summary>Error Details</summary>
+                    <pre>{{ result.error }}</pre>
+                </details>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+    </div>
+
+    <script src="{{ url_for('static', filename='js/results.js') }}"></script>
+</body>
+</html>
