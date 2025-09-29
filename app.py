@@ -75,8 +75,9 @@ def process_data_background(job_id, raw_file_path, report_file_path, week_num):
         processing_jobs[job_id]['status'] = 'processing'
         processing_jobs[job_id]['progress'] = 10
 
-        # Initialize DisplayTracker
-        tracker = DisplayTracker()
+        # Initialize DisplayTracker with proper log file path
+        log_file_path = os.path.join('logs', 'display_tracker.log')
+        tracker = DisplayTracker(log_file=log_file_path)
         processing_jobs[job_id]['progress'] = 30
 
         # Process the data
