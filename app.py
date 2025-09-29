@@ -97,45 +97,50 @@ def process_data_background(job_id, raw_file_path, report_file_path, week_num):
         processing_jobs[job_id]['progress'] = 70
 
         if result['success']:
-            # Generate charts
-            chart_generator = ChartGenerator()
+            # Try to generate charts (optional, won't fail if Chrome is missing)
+            try:
+                if ChartGenerator is not None:
+                    chart_generator = ChartGenerator()
 
-            # Load alert data for charts (it should be in reports directory now)
-            alert_file = os.path.join(REPORTS_FOLDER, result.get('alert_file', f'alerts-week-{week_num}.json'))
-            if os.path.exists(alert_file):
-                with open(alert_file, 'r', encoding='utf-8') as f:
-                    alert_data = json.load(f)
+                    # Load alert data for charts (it should be in reports directory now)
+                    alert_file = os.path.join(REPORTS_FOLDER, result.get('alert_file', f'alerts-week-{week_num}.json'))
+                    if os.path.exists(alert_file):
+                        with open(alert_file, 'r', encoding='utf-8') as f:
+                            alert_data = json.load(f)
 
-                # Generate charts
-                increases_data = None
-                decreases_data = None
+                        # Generate charts
+                        increases_data = None
+                        decreases_data = None
 
-                if 'top_increases' in alert_data and alert_data['top_increases']:
-                    increases_data = {
-                        'Model': [item['Model'] for item in alert_data['top_increases']],
-                        'Diff': [item['Difference'] for item in alert_data['top_increases']]
-                    }
+                        if 'top_increases' in alert_data and alert_data['top_increases']:
+                            increases_data = {
+                                'Model': [item['Model'] for item in alert_data['top_increases']],
+                                'Diff': [item['Difference'] for item in alert_data['top_increases']]
+                            }
 
-                if 'top_decreases' in alert_data and alert_data['top_decreases']:
-                    decreases_data = {
-                        'Model': [item['Model'] for item in alert_data['top_decreases']],
-                        'Diff': [item['Difference'] for item in alert_data['top_decreases']]
-                    }
+                        if 'top_decreases' in alert_data and alert_data['top_decreases']:
+                            decreases_data = {
+                                'Model': [item['Model'] for item in alert_data['top_decreases']],
+                                'Diff': [item['Difference'] for item in alert_data['top_decreases']]
+                            }
 
-                # Create charts and save to charts folder
-                if increases_data:
-                    chart_generator.create_increase_chart(
-                        increases_data,
-                        f"Top Model Display Increases W{week_num}",
-                        f"week_{week_num}_increases"
-                    )
+                        # Create charts and save to charts folder
+                        if increases_data:
+                            chart_generator.create_increase_chart(
+                                increases_data,
+                                f"Top Model Display Increases W{week_num}",
+                                f"week_{week_num}_increases"
+                            )
 
-                if decreases_data:
-                    chart_generator.create_decrease_chart(
-                        decreases_data,
-                        f"Top Model Display Decreases W{week_num}",
-                        f"week_{week_num}_decreases"
-                    )
+                        if decreases_data:
+                            chart_generator.create_decrease_chart(
+                                decreases_data,
+                                f"Top Model Display Decreases W{week_num}",
+                                f"week_{week_num}_decreases"
+                            )
+            except Exception as e:
+                print(f"Warning: Could not generate charts: {e}")
+                # Continue without charts - this is optional
 
             processing_jobs[job_id]['progress'] = 100
             processing_jobs[job_id]['status'] = 'completed'
