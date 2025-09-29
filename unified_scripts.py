@@ -18,7 +18,7 @@ def setup_logging():
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler('unified_scripts.log'),
+            logging.FileHandler(os.path.join('logs', 'unified_scripts.log')),
             logging.StreamHandler()
         ]
     )

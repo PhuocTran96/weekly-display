@@ -80,15 +80,15 @@ def process_data_background(job_id, raw_file_path, report_file_path, week_num):
         tracker = DisplayTracker(log_file=log_file_path)
         processing_jobs[job_id]['progress'] = 30
 
+        # Convert to absolute paths before changing directory
+        abs_raw_path = os.path.abspath(raw_file_path)
+        abs_report_path = os.path.abspath(report_file_path)
+
         # Change to reports directory to save files there
         original_dir = os.getcwd()
         os.chdir(REPORTS_FOLDER)
 
         try:
-            # Convert to absolute paths before changing directory
-            abs_raw_path = os.path.abspath(raw_file_path)
-            abs_report_path = os.path.abspath(report_file_path)
-
             # Process the data
             result = tracker.process_weekly_data(abs_raw_path, abs_report_path, week_num)
         finally:
@@ -100,8 +100,8 @@ def process_data_background(job_id, raw_file_path, report_file_path, week_num):
             # Generate charts
             chart_generator = ChartGenerator()
 
-            # Load alert data for charts
-            alert_file = result.get('alert_file', f'alerts-week-{week_num}.json')
+            # Load alert data for charts (it should be in reports directory now)
+            alert_file = os.path.join(REPORTS_FOLDER, result.get('alert_file', f'alerts-week-{week_num}.json'))
             if os.path.exists(alert_file):
                 with open(alert_file, 'r', encoding='utf-8') as f:
                     alert_data = json.load(f)

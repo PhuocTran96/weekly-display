@@ -121,7 +121,8 @@ def format_file_size(size_bytes):
 
 def save_processing_metadata(job_id, session_id, metadata):
     """Save processing metadata to JSON file"""
-    metadata_file = f"processing_metadata_{job_id}.json"
+    os.makedirs('logs', exist_ok=True)
+    metadata_file = os.path.join('logs', f"processing_metadata_{job_id}.json")
 
     full_metadata = {
         'job_id': job_id,
@@ -140,7 +141,7 @@ def save_processing_metadata(job_id, session_id, metadata):
 
 def load_processing_metadata(job_id):
     """Load processing metadata from JSON file"""
-    metadata_file = f"processing_metadata_{job_id}.json"
+    metadata_file = os.path.join('logs', f"processing_metadata_{job_id}.json")
 
     try:
         if os.path.exists(metadata_file):
@@ -216,7 +217,8 @@ def log_request(request_type, details=None):
         'details': details or {}
     }
 
-    log_file = 'request_log.json'
+    os.makedirs('logs', exist_ok=True)
+    log_file = os.path.join('logs', 'request_log.json')
 
     try:
         # Load existing logs
