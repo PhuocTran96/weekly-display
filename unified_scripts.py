@@ -301,7 +301,7 @@ class DisplayTracker:
 
             # Identify model column pairs and compute new totals efficiently
             model_cols = []
-            new_columns = {}
+            new_columns_list = []
 
             for col in merged.columns[4:]:
                 if col.endswith('_old'):
@@ -309,15 +309,16 @@ class DisplayTracker:
                     add_col = base + '_add'
                     if add_col in merged.columns:
                         model_cols.append((base, col, add_col))
-                        new_columns[base] = merged[col] + merged[add_col]
+                        new_columns_list.append(pd.Series(merged[col] + merged[add_col], name=base))
                     else:
                         merged[add_col] = 0
                         model_cols.append((base, col, add_col))
-                        new_columns[base] = merged[col]
+                        new_columns_list.append(pd.Series(merged[col], name=base))
 
-            # Add all new columns at once to avoid fragmentation
-            for col_name, col_data in new_columns.items():
-                merged[col_name] = col_data
+            # Use pd.concat to add all new columns at once to avoid fragmentation
+            if new_columns_list:
+                new_columns_df = pd.concat(new_columns_list, axis=1)
+                merged = pd.concat([merged, new_columns_df], axis=1)
 
             # Create final updated report
             final_cols = id_cols + [base for base, _, _ in model_cols]

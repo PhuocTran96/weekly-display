@@ -390,5 +390,11 @@ if __name__ == '__main__':
     for folder in [UPLOAD_FOLDER, REPORTS_FOLDER, CHARTS_FOLDER]:
         os.makedirs(folder, exist_ok=True)
 
-    # Run the application
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Run the application with Windows-friendly settings
+    import sys
+    if sys.platform.startswith('win'):
+        # Windows-specific settings to avoid socket errors
+        app.run(debug=True, host='127.0.0.1', port=5000, threaded=True, use_reloader=False)
+    else:
+        # Linux/Unix settings (for VPS)
+        app.run(debug=True, host='0.0.0.0', port=5000)
