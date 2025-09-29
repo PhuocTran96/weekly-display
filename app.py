@@ -80,8 +80,20 @@ def process_data_background(job_id, raw_file_path, report_file_path, week_num):
         tracker = DisplayTracker(log_file=log_file_path)
         processing_jobs[job_id]['progress'] = 30
 
-        # Process the data
-        result = tracker.process_weekly_data(raw_file_path, report_file_path, week_num)
+        # Change to reports directory to save files there
+        original_dir = os.getcwd()
+        os.chdir(REPORTS_FOLDER)
+
+        try:
+            # Convert to absolute paths before changing directory
+            abs_raw_path = os.path.abspath(raw_file_path)
+            abs_report_path = os.path.abspath(report_file_path)
+
+            # Process the data
+            result = tracker.process_weekly_data(abs_raw_path, abs_report_path, week_num)
+        finally:
+            # Always change back to original directory
+            os.chdir(original_dir)
         processing_jobs[job_id]['progress'] = 70
 
         if result['success']:
