@@ -175,18 +175,25 @@ class ChartGenerator:
         """Save chart as both PNG and SVG"""
         import os
 
-        # Ensure charts directory exists
-        charts_dir = 'charts'
+        # Use absolute path to charts directory
+        charts_dir = os.path.abspath('charts')
         os.makedirs(charts_dir, exist_ok=True)
 
         # Save to charts directory
         png_file = os.path.join(charts_dir, f"{prefix}_chart.png")
         svg_file = os.path.join(charts_dir, f"{prefix}_chart.svg")
 
-        fig.write_image(png_file)
-        fig.write_image(svg_file, format='svg')
-
-        print(f"Charts saved: {png_file}, {svg_file}")
+        try:
+            fig.write_image(png_file)
+            fig.write_image(svg_file, format='svg')
+            print(f"Charts saved successfully: {png_file}, {svg_file}")
+        except Exception as e:
+            print(f"Error saving charts: {e}")
+            # Try to save as HTML fallback
+            html_file = os.path.join(charts_dir, f"{prefix}_chart.html")
+            fig.write_html(html_file)
+            print(f"Saved as HTML fallback: {html_file}")
+            raise e
 
     def load_data_from_json(self, json_file):
         """Load data from JSON alert summary file"""

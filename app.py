@@ -98,8 +98,11 @@ def process_data_background(job_id, raw_file_path, report_file_path, week_num):
 
         if result['success']:
             # Try to generate charts (optional, won't fail if Chrome is missing)
+            charts_created = {'increases': None, 'decreases': None}
             try:
                 if ChartGenerator is not None:
+                    # Generate charts from the main directory (not reports directory)
+                    # to ensure proper file paths
                     chart_generator = ChartGenerator()
 
                     # Load alert data for charts (it should be in reports directory now)
@@ -131,6 +134,10 @@ def process_data_background(job_id, raw_file_path, report_file_path, week_num):
                                 f"Top Model Display Increases W{week_num}",
                                 f"week_{week_num}_increases"
                             )
+                            # Check if chart was actually created
+                            increases_chart_file = f"week_{week_num}_increases_chart.png"
+                            if os.path.exists(os.path.join(CHARTS_FOLDER, increases_chart_file)):
+                                charts_created['increases'] = increases_chart_file
 
                         if decreases_data:
                             chart_generator.create_decrease_chart(
@@ -138,6 +145,10 @@ def process_data_background(job_id, raw_file_path, report_file_path, week_num):
                                 f"Top Model Display Decreases W{week_num}",
                                 f"week_{week_num}_decreases"
                             )
+                            # Check if chart was actually created
+                            decreases_chart_file = f"week_{week_num}_decreases_chart.png"
+                            if os.path.exists(os.path.join(CHARTS_FOLDER, decreases_chart_file)):
+                                charts_created['decreases'] = decreases_chart_file
             except Exception as e:
                 print(f"Warning: Could not generate charts: {e}")
                 # Continue without charts - this is optional
@@ -149,10 +160,7 @@ def process_data_background(job_id, raw_file_path, report_file_path, week_num):
                 'report_file': result['updated_report_file'],
                 'alert_file': result['alert_file'],
                 'summary': result['summary'],
-                'charts': {
-                    'increases': f"week_{week_num}_increases_chart.png",
-                    'decreases': f"week_{week_num}_decreases_chart.png"
-                }
+                'charts': charts_created
             }
         else:
             processing_jobs[job_id]['status'] = 'failed'
