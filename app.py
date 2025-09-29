@@ -129,26 +129,34 @@ def process_data_background(job_id, raw_file_path, report_file_path, week_num):
 
                         # Create charts and save to charts folder
                         if increases_data:
-                            chart_generator.create_increase_chart(
-                                increases_data,
-                                f"Top Model Display Increases W{week_num}",
-                                f"week_{week_num}_increases"
-                            )
-                            # Check if chart was actually created
-                            increases_chart_file = f"week_{week_num}_increases_chart.png"
-                            if os.path.exists(os.path.join(CHARTS_FOLDER, increases_chart_file)):
-                                charts_created['increases'] = increases_chart_file
+                            try:
+                                chart_generator.create_increase_chart(
+                                    increases_data,
+                                    f"Top Model Display Increases W{week_num}",
+                                    f"week_{week_num}_increases"
+                                )
+                                # Check if chart was actually created
+                                increases_chart_file = f"week_{week_num}_increases_chart.png"
+                                if os.path.exists(os.path.join(CHARTS_FOLDER, increases_chart_file)):
+                                    charts_created['increases'] = increases_chart_file
+                                    print(f"Successfully created increases chart: {increases_chart_file}")
+                            except Exception as e:
+                                print(f"Failed to create increases chart: {e}")
 
                         if decreases_data:
-                            chart_generator.create_decrease_chart(
-                                decreases_data,
-                                f"Top Model Display Decreases W{week_num}",
-                                f"week_{week_num}_decreases"
-                            )
-                            # Check if chart was actually created
-                            decreases_chart_file = f"week_{week_num}_decreases_chart.png"
-                            if os.path.exists(os.path.join(CHARTS_FOLDER, decreases_chart_file)):
-                                charts_created['decreases'] = decreases_chart_file
+                            try:
+                                chart_generator.create_decrease_chart(
+                                    decreases_data,
+                                    f"Top Model Display Decreases W{week_num}",
+                                    f"week_{week_num}_decreases"
+                                )
+                                # Check if chart was actually created
+                                decreases_chart_file = f"week_{week_num}_decreases_chart.png"
+                                if os.path.exists(os.path.join(CHARTS_FOLDER, decreases_chart_file)):
+                                    charts_created['decreases'] = decreases_chart_file
+                                    print(f"Successfully created decreases chart: {decreases_chart_file}")
+                            except Exception as e:
+                                print(f"Failed to create decreases chart: {e}")
             except Exception as e:
                 print(f"Warning: Could not generate charts: {e}")
                 # Continue without charts - this is optional

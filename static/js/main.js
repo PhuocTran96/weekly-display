@@ -288,22 +288,30 @@ function updateStatistics(summary) {
 }
 
 function updateCharts(charts) {
+    console.log('Updating charts:', charts);
+
     if (charts.increases) {
         const increasesImg = document.getElementById('increasesChart');
         const increasesPlaceholder = document.getElementById('increasesPlaceholder');
 
-        increasesImg.src = `/charts/increases/${charts.increases.split('/').pop()}`;
+        increasesImg.src = `/charts/increases/${charts.increases}`;
         increasesImg.classList.remove('hidden');
         if (increasesPlaceholder) increasesPlaceholder.style.display = 'none';
+        console.log('Set increases chart src:', increasesImg.src);
+    } else {
+        console.log('No increases chart data');
     }
 
     if (charts.decreases) {
         const decreasesImg = document.getElementById('decreasesChart');
         const decreasesPlaceholder = document.getElementById('decreasesPlaceholder');
 
-        decreasesImg.src = `/charts/decreases/${charts.decreases.split('/').pop()}`;
+        decreasesImg.src = `/charts/decreases/${charts.decreases}`;
         decreasesImg.classList.remove('hidden');
         if (decreasesPlaceholder) decreasesPlaceholder.style.display = 'none';
+        console.log('Set decreases chart src:', decreasesImg.src);
+    } else {
+        console.log('No decreases chart data');
     }
 }
 

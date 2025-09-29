@@ -299,23 +299,29 @@ class DisplayTracker:
             for col in merged.columns[4:]:
                 merged[col] = merged[col].fillna(0)
 
-            # Identify model column pairs and compute new totals
+            # Identify model column pairs and compute new totals efficiently
             model_cols = []
+            new_columns = {}
+
             for col in merged.columns[4:]:
                 if col.endswith('_old'):
                     base = col[:-4]
                     add_col = base + '_add'
                     if add_col in merged.columns:
                         model_cols.append((base, col, add_col))
-                        merged[base] = merged[col] + merged[add_col]
+                        new_columns[base] = merged[col] + merged[add_col]
                     else:
                         merged[add_col] = 0
                         model_cols.append((base, col, add_col))
-                        merged[base] = merged[col]
+                        new_columns[base] = merged[col]
+
+            # Add all new columns at once to avoid fragmentation
+            for col_name, col_data in new_columns.items():
+                merged[col_name] = col_data
 
             # Create final updated report
             final_cols = id_cols + [base for base, _, _ in model_cols]
-            updated_report = merged[final_cols]
+            updated_report = merged[final_cols].copy()  # Use copy() to defragment
 
             self.logger.info(f"Merged data successfully: {updated_report.shape}")
             return updated_report, model_cols, merged
