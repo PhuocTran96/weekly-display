@@ -318,11 +318,25 @@ function updateCharts(charts) {
 function updateDownloadLinks(result) {
     const reportLink = document.getElementById('downloadReportLink');
     const alertsLink = document.getElementById('downloadAlertsLink');
+    const increasesLink = document.getElementById('downloadIncreasesLink');
+    const decreasesLink = document.getElementById('downloadDecreasesLink');
 
     if (reportLink && result.report_file) {
         reportLink.href = `/download/${result.report_file}`;
         reportLink.download = result.report_file;
         reportLink.classList.remove('disabled');
+    }
+
+    if (increasesLink && result.increases_file) {
+        increasesLink.href = `/download/${result.increases_file}`;
+        increasesLink.download = result.increases_file;
+        increasesLink.classList.remove('disabled');
+    }
+
+    if (decreasesLink && result.decreases_file) {
+        decreasesLink.href = `/download/${result.decreases_file}`;
+        decreasesLink.download = result.decreases_file;
+        decreasesLink.classList.remove('disabled');
     }
 
     if (alertsLink && result.alert_file) {

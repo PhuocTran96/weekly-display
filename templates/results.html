@@ -80,6 +80,28 @@
                 </div>
 
                 <div class="download-card">
+                    <div class="download-icon">📈</div>
+                    <h3>Increases Report</h3>
+                    <p>Download all models with display increases</p>
+                    <a href="{{ url_for('download_file', filename=result.increases_file) }}"
+                       download="{{ result.increases_file }}"
+                       class="btn btn--primary">
+                        Download CSV
+                    </a>
+                </div>
+
+                <div class="download-card">
+                    <div class="download-icon">📉</div>
+                    <h3>Decreases Report</h3>
+                    <p>Download all models with display decreases</p>
+                    <a href="{{ url_for('download_file', filename=result.decreases_file) }}"
+                       download="{{ result.decreases_file }}"
+                       class="btn btn--primary">
+                        Download CSV
+                    </a>
+                </div>
+
+                <div class="download-card">
                     <div class="download-icon">⚠️</div>
                     <h3>Alerts Summary</h3>
                     <p>Download detailed alerts and changes in JSON format</p>

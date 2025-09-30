@@ -13,9 +13,13 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
+from dotenv import load_dotenv
 
 from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for, flash, session
 import pandas as pd
+
+# Load environment variables
+load_dotenv()
 
 # Import existing processing modules
 try:
@@ -28,6 +32,11 @@ try:
 except ImportError:
     # Fallback if chart_generator is not available
     ChartGenerator = None
+
+try:
+    from config import config
+except ImportError:
+    config = None
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
@@ -75,9 +84,22 @@ def process_data_background(job_id, raw_file_path, report_file_path, week_num):
         processing_jobs[job_id]['status'] = 'processing'
         processing_jobs[job_id]['progress'] = 10
 
-        # Initialize DisplayTracker with proper log file path
+        # Get email configuration from environment
+        email_enabled = os.environ.get('EMAIL_ENABLED', 'False').lower() == 'true'
+        gmail_email = os.environ.get('GMAIL_EMAIL', '')
+        gmail_password = os.environ.get('GMAIL_APP_PASSWORD', '')
+        boss_emails = os.environ.get('BOSS_EMAILS', '').split(',') if os.environ.get('BOSS_EMAILS') else []
+        send_pic_emails = os.environ.get('SEND_PIC_EMAILS', 'True').lower() == 'true'
+        send_boss_emails = os.environ.get('SEND_BOSS_EMAILS', 'True').lower() == 'true'
+
+        # Initialize DisplayTracker with proper log file path and email settings
         log_file_path = os.path.join('logs', 'display_tracker.log')
-        tracker = DisplayTracker(log_file=log_file_path)
+        tracker = DisplayTracker(
+            log_file=log_file_path,
+            enable_email=email_enabled,
+            gmail_email=gmail_email,
+            gmail_password=gmail_password
+        )
         processing_jobs[job_id]['progress'] = 30
 
         # Convert to absolute paths before changing directory
@@ -89,8 +111,16 @@ def process_data_background(job_id, raw_file_path, report_file_path, week_num):
         os.chdir(REPORTS_FOLDER)
 
         try:
-            # Process the data
-            result = tracker.process_weekly_data(abs_raw_path, abs_report_path, week_num)
+            # Process the data with email notifications
+            result = tracker.process_weekly_data(
+                raw_file=abs_raw_path,
+                previous_report_file=abs_report_path,
+                week_num=week_num,
+                send_emails=email_enabled,
+                boss_emails=boss_emails,
+                send_pic_emails=send_pic_emails,
+                send_boss_emails=send_boss_emails
+            )
         finally:
             # Always change back to original directory
             os.chdir(original_dir)
@@ -167,6 +197,8 @@ def process_data_background(job_id, raw_file_path, report_file_path, week_num):
                 'success': True,
                 'report_file': result['updated_report_file'],
                 'alert_file': result['alert_file'],
+                'increases_file': f'increases-week-{week_num}.csv',
+                'decreases_file': f'decreases-week-{week_num}.csv',
                 'summary': result['summary'],
                 'charts': charts_created
             }
@@ -369,6 +401,245 @@ def show_results(job_id):
                          job_id=job_id,
                          result=job['result'],
                          week_num=job['week_num'])
+
+# ==================== CONTACTS MANAGEMENT ROUTES ====================
+
+@app.route('/contacts')
+def contacts_page():
+    """Contacts management page"""
+    return render_template('contacts.html')
+
+@app.route('/api/contacts', methods=['GET'])
+def get_contacts():
+    """Get all contacts"""
+    try:
+        from db_manager import DatabaseManager
+
+        db = DatabaseManager()
+        active_only = request.args.get('active_only', 'true').lower() == 'true'
+        contacts = db.get_all_contacts(active_only=active_only)
+        db.close()
+
+        return jsonify({
+            'success': True,
+            'contacts': contacts,
+            'count': len(contacts)
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/contacts/<elux_id>', methods=['GET'])
+def get_contact(elux_id):
+    """Get single contact by Elux ID"""
+    try:
+        from db_manager import DatabaseManager
+
+        db = DatabaseManager()
+        contact = db.get_contact_by_elux_id(elux_id)
+        db.close()
+
+        if contact:
+            return jsonify({
+                'success': True,
+                'contact': contact
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Contact not found'
+            }), 404
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/contacts', methods=['POST'])
+def add_contact():
+    """Add new contact"""
+    try:
+        from db_manager import DatabaseManager
+
+        data = request.get_json()
+
+        # Validate required fields
+        required_fields = ['elux_id', 'dealer_id', 'store_name', 'channel', 'pic_name', 'pic_email']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({
+                    'success': False,
+                    'error': f'Missing required field: {field}'
+                }), 400
+
+        db = DatabaseManager()
+        result = db.add_contact(data)
+        db.close()
+
+        if result['success']:
+            return jsonify(result), 201
+        else:
+            return jsonify(result), 400
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/contacts/<elux_id>', methods=['PUT'])
+def update_contact(elux_id):
+    """Update existing contact"""
+    try:
+        from db_manager import DatabaseManager
+
+        data = request.get_json()
+
+        db = DatabaseManager()
+        result = db.update_contact(elux_id, data)
+        db.close()
+
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 404 if 'not found' in result.get('error', '').lower() else 400
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/contacts/<elux_id>', methods=['DELETE'])
+def delete_contact(elux_id):
+    """Delete contact (soft delete by default)"""
+    try:
+        from db_manager import DatabaseManager
+
+        soft_delete = request.args.get('soft', 'true').lower() == 'true'
+
+        db = DatabaseManager()
+        result = db.delete_contact(elux_id, soft_delete=soft_delete)
+        db.close()
+
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 404
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/contacts/search', methods=['GET'])
+def search_contacts():
+    """Search contacts"""
+    try:
+        from db_manager import DatabaseManager
+
+        search_term = request.args.get('q', '')
+        active_only = request.args.get('active_only', 'true').lower() == 'true'
+
+        if not search_term:
+            return jsonify({
+                'success': False,
+                'error': 'Search term required'
+            }), 400
+
+        db = DatabaseManager()
+        results = db.search_contacts(search_term, active_only=active_only)
+        db.close()
+
+        return jsonify({
+            'success': True,
+            'contacts': results,
+            'count': len(results)
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/contacts/export', methods=['GET'])
+def export_contacts():
+    """Export contacts to CSV"""
+    try:
+        from db_manager import DatabaseManager
+        import csv
+        from io import StringIO
+
+        db = DatabaseManager()
+        df = db.get_contacts_dataframe(active_only=False)
+        db.close()
+
+        if df.empty:
+            return jsonify({
+                'success': False,
+                'error': 'No contacts to export'
+            }), 404
+
+        # Create CSV in memory
+        output = StringIO()
+        df.to_csv(output, index=False)
+        output.seek(0)
+
+        from flask import Response
+        return Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={'Content-Disposition': 'attachment; filename=contacts_export.csv'}
+        )
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/contacts/import', methods=['POST'])
+def import_contacts():
+    """Import contacts from CSV"""
+    try:
+        from db_manager import DatabaseManager
+        import pandas as pd
+        from io import StringIO
+
+        if 'file' not in request.files:
+            return jsonify({
+                'success': False,
+                'error': 'No file provided'
+            }), 400
+
+        file = request.files['file']
+
+        if file.filename == '':
+            return jsonify({
+                'success': False,
+                'error': 'No file selected'
+            }), 400
+
+        if not file.filename.endswith('.csv'):
+            return jsonify({
+                'success': False,
+                'error': 'Only CSV files allowed'
+            }), 400
+
+        # Read CSV
+        df = pd.read_csv(file)
+        contacts_list = df.to_dict('records')
+
+        # Import to database
+        db = DatabaseManager()
+        result = db.bulk_import_contacts(contacts_list)
+        db.close()
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @app.errorhandler(413)
 def too_large(e):

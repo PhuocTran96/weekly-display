@@ -190,3 +190,9 @@ logs/
 *.csv
 *.json
 *.xlsx
+.claude/
+
+# Email Configuration (contains sensitive contact information)
+# Keep shop_contacts.csv with sample data in repo, but ignore local version
+# Uncomment the line below if you want to exclude shop_contacts.csv from git:
+# shop_contacts.csv

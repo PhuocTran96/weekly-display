@@ -12,6 +12,10 @@
         <header class="header">
             <h1>Display Tracking Dashboard</h1>
             <p>Automate display data processing and track model performance changes</p>
+            <nav class="header-nav">
+                <a href="{{ url_for('dashboard') }}" class="nav-link">Home</a>
+                <a href="{{ url_for('contacts_page') }}" class="nav-link">Manage Contacts</a>
+            </nav>
         </header>
 
         <!-- Flash Messages -->
@@ -182,6 +186,30 @@
                 </div>
 
                 <div class="download-card">
+                    <div class="download-icon">📈</div>
+                    <h3>Increases Report</h3>
+                    <p>Download all models with display increases</p>
+                    <a href="#"
+                       id="downloadIncreasesLink"
+                       download=""
+                       class="btn btn--primary disabled">
+                        Download CSV
+                    </a>
+                </div>
+
+                <div class="download-card">
+                    <div class="download-icon">📉</div>
+                    <h3>Decreases Report</h3>
+                    <p>Download all models with display decreases</p>
+                    <a href="#"
+                       id="downloadDecreasesLink"
+                       download=""
+                       class="btn btn--primary disabled">
+                        Download CSV
+                    </a>
+                </div>
+
+                <div class="download-card">
                     <div class="download-icon">⚠️</div>
                     <h3>Alerts Summary</h3>
                     <p>Download detailed alerts and changes in JSON format</p>
@@ -194,7 +222,7 @@
                 </div>
 
                 <div class="download-card">
-                    <div class="download-icon">📈</div>
+                    <div class="download-icon">📊</div>
                     <h3>Charts Package</h3>
                     <p>Download generated charts as PNG files</p>
                     <div class="chart-downloads" id="chartDownloads">

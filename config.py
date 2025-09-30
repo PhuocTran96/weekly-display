@@ -27,6 +27,21 @@ class Config:
     MAX_PROCESSING_TIME = 300  # 5 minutes timeout
     BACKGROUND_JOBS_LIMIT = 5  # Maximum concurrent jobs
 
+    # Email notification settings
+    EMAIL_NOTIFICATIONS_ENABLED = os.environ.get('EMAIL_ENABLED', 'False').lower() == 'true'
+    GMAIL_EMAIL = os.environ.get('GMAIL_EMAIL', '')
+    GMAIL_APP_PASSWORD = os.environ.get('GMAIL_APP_PASSWORD', '')
+    BOSS_EMAILS = os.environ.get('BOSS_EMAILS', '').split(',') if os.environ.get('BOSS_EMAILS') else []
+    SHOP_CONTACTS_FILE = 'shop_contacts.csv'
+    MIN_DECREASE_THRESHOLD = int(os.environ.get('MIN_DECREASE_THRESHOLD', '1'))  # Minimum decrease to trigger email
+    SEND_PIC_EMAILS = os.environ.get('SEND_PIC_EMAILS', 'True').lower() == 'true'
+    SEND_BOSS_EMAILS = os.environ.get('SEND_BOSS_EMAILS', 'True').lower() == 'true'
+
+    # MongoDB settings
+    MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/')
+    MONGODB_DATABASE = os.environ.get('MONGODB_DATABASE', 'display_tracking')
+    USE_MONGODB = os.environ.get('USE_MONGODB', 'True').lower() == 'true'
+
 class DevelopmentConfig(Config):
     """Development configuration"""
     DEBUG = True
