@@ -174,6 +174,8 @@ class ChartGenerator:
     def _save_chart(self, fig, prefix):
         """Save chart as both PNG and SVG"""
         import os
+        import sys
+        import traceback
 
         # Use absolute path to charts directory
         charts_dir = os.path.abspath('charts')
@@ -184,11 +186,21 @@ class ChartGenerator:
         svg_file = os.path.join(charts_dir, f"{prefix}_chart.svg")
 
         try:
+            print(f"Attempting to save PNG chart to: {png_file}")
+            print(f"Python version: {sys.version}")
+            print(f"Current working directory: {os.getcwd()}")
+            print(f"Running as user: {os.getenv('USER', 'unknown')}")
+            print(f"HOME: {os.getenv('HOME', 'not set')}")
+            print(f"TMPDIR: {os.getenv('TMPDIR', 'not set')}")
+
             fig.write_image(png_file)
             fig.write_image(svg_file, format='svg')
             print(f"Charts saved successfully: {png_file}, {svg_file}")
         except Exception as e:
             print(f"Error saving charts: {e}")
+            print(f"Error type: {type(e).__name__}")
+            print(f"Full traceback:")
+            traceback.print_exc()
             # Try to save as HTML fallback
             html_file = os.path.join(charts_dir, f"{prefix}_chart.html")
             fig.write_html(html_file)
