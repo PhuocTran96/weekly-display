@@ -2,7 +2,7 @@
 
 ## 🚀 Quick Start Guide
 
-Your weekly display tracking system has been converted into a web application! Here's how to use it:
+A modern, refactored web application for weekly display tracking with enhanced architecture, modular design, and improved maintainability.
 
 ### Local Testing
 
@@ -11,12 +11,18 @@ Your weekly display tracking system has been converted into a web application! H
    pip install -r requirements.txt
    ```
 
-2. **Run the application:**
+2. **Configure environment:**
    ```bash
-   python app.py
+   cp .env.example .env
+   # Edit .env with your configuration
    ```
 
-3. **Access the web interface:**
+3. **Run the application:**
+   ```bash
+   python run.py
+   ```
+
+4. **Access the web interface:**
    Open your browser and go to `http://localhost:5000`
 
 ### VPS Deployment
@@ -35,29 +41,63 @@ Your weekly display tracking system has been converted into a web application! H
 3. **Access your web application:**
    Visit `http://your-vps-ip` in your browser
 
-## 📁 Directory Structure
+## 📁 Refactored Directory Structure
 
 ```
 weekly-display/
-├── app.py                    # Main Flask application
-├── config.py                 # Configuration settings
-├── requirements.txt          # Python dependencies
-├── utils.py                  # Utility functions
-├── templates/                # HTML templates
-│   ├── dashboard.html        # Main dashboard
-│   ├── upload.html           # Upload page
-│   └── results.html          # Results page
-├── static/                   # Static assets
-│   ├── css/style.css         # Enhanced stylesheet
-│   └── js/                   # JavaScript files
-├── uploads/                  # Temporary uploaded files
-├── reports/                  # Generated reports
-├── charts/                   # Generated charts
-├── logs/                     # Application logs
-├── deploy.sh                 # VPS deployment script
-├── nginx.conf                # Nginx configuration
-├── weekly_display.service    # Systemd service
-└── [existing files]          # Your original scripts
+├── run.py                           # Application entry point (new)
+├── config.py                        # Configuration settings
+├── requirements.txt                 # Python dependencies
+├── .env.example                     # Environment variables template (new)
+│
+├── app/                             # Main application package (new)
+│   ├── __init__.py                  # Application factory
+│   ├── routes/                      # Route blueprints (new)
+│   │   ├── __init__.py
+│   │   ├── main.py                  # Dashboard & download routes
+│   │   ├── upload.py                # File upload routes
+│   │   ├── process.py               # Data processing routes
+│   │   └── contacts.py              # Contact management API
+│   ├── services/                    # Business logic (new)
+│   │   ├── __init__.py
+│   │   └── processor.py             # Background processing service
+│   └── utils/                       # Utility modules (new)
+│       ├── __init__.py
+│       ├── file_utils.py            # File operations
+│       └── validators.py            # Input validation
+│
+├── static/                          # Static assets
+│   ├── css/
+│   │   ├── style.css                # Main stylesheet
+│   │   └── components/              # Component styles (new)
+│   └── js/
+│       ├── app.js                   # Main application (new)
+│       └── modules/                 # JavaScript modules (new)
+│           ├── upload.module.js     # Upload functionality
+│           ├── processor.module.js  # Processing logic
+│           └── results.module.js    # Results display
+│
+├── templates/                       # HTML templates
+│   ├── dashboard.html               # Main dashboard
+│   ├── upload.html                  # Upload page
+│   ├── results.html                 # Results page
+│   └── contacts.html                # Contacts management
+│
+├── uploads/                         # Temporary uploaded files
+├── reports/                         # Generated reports
+├── charts/                          # Generated charts
+├── logs/                            # Application logs
+│
+├── Core Processing Files            # Backend processing logic
+│   ├── unified_scripts.py           # Core tracking logic
+│   ├── display_tracking_system.py   # Display tracking system
+│   ├── chart_generator.py           # Chart generation
+│   ├── email_notifier.py            # Email notifications
+│   └── db_manager.py                # Database operations
+│
+├── deploy.sh                        # VPS deployment script
+├── nginx.conf                       # Nginx configuration
+└── weekly_display.service           # Systemd service
 ```
 
 ## 🌐 Web Interface Features
@@ -74,26 +114,65 @@ weekly-display/
 2. Select previous week report CSV
 3. Set week number
 4. Upload files
-5. Click "Process Data"
+5. Click "Process Data" (emails are NOT sent automatically)
 6. View results and download reports
+7. Click "📧 Send Email Notifications" button to send emails (optional)
 
 ### API Endpoints
+
+**Main Routes:**
 - `GET /` - Main dashboard
-- `POST /upload` - File upload
-- `POST /process` - Start processing
-- `GET /status/<job_id>` - Processing status
 - `GET /download/<filename>` - File downloads
 - `GET /charts/<type>/<filename>` - Chart serving
+
+**Upload Routes:**
+- `POST /upload/` - File upload endpoint
+
+**Process Routes:**
+- `POST /process/` - Start data processing (emails disabled)
+- `GET /process/status/<job_id>` - Check processing status
+- `GET /process/results/<job_id>` - View processing results
+- `POST /process/send-emails` - Manually trigger email notifications
+
+**Contact API Routes:**
+- `GET /api/contacts/all` - Get all contacts
+- `GET /api/contacts/<elux_id>` - Get single contact
+- `POST /api/contacts/add` - Add new contact
+- `PUT /api/contacts/<elux_id>` - Update contact
+- `DELETE /api/contacts/<elux_id>` - Delete contact
+- `GET /api/contacts/search` - Search contacts
+- `GET /api/contacts/export` - Export contacts to CSV
+- `POST /api/contacts/import` - Import contacts from CSV
 
 ## 🔧 Configuration
 
 ### Environment Variables (.env)
+
+Copy [.env.example](.env.example) to `.env` and configure:
+
 ```bash
-FLASK_APP=app.py
-FLASK_ENV=production
-SECRET_KEY=your-secret-key
+# Flask Configuration
+FLASK_ENV=development
+FLASK_APP=run.py
+SECRET_KEY=your-secret-key-change-in-production
 HOST=0.0.0.0
 PORT=5000
+
+# Email Configuration
+EMAIL_ENABLED=False
+GMAIL_EMAIL=your-email@gmail.com
+GMAIL_APP_PASSWORD=your-app-password
+BOSS_EMAILS=boss1@example.com,boss2@example.com
+SEND_PIC_EMAILS=True
+SEND_BOSS_EMAILS=True
+
+# Display Tracking Configuration
+MIN_DECREASE_THRESHOLD=1
+
+# MongoDB Configuration
+USE_MONGODB=True
+MONGODB_URI=mongodb://localhost:27017/
+MONGODB_DATABASE=display_tracking
 ```
 
 ### File Limits
@@ -206,6 +285,29 @@ Visit `http://your-domain/health` to check application status
 3. **Set up backup** (optional)
 4. **Monitor performance** and optimize if needed
 
+## 🎯 Refactoring Improvements
+
+### Architecture Enhancements
+- ✅ **Application Factory Pattern** - Modular app initialization
+- ✅ **Blueprint Architecture** - Separated route concerns
+- ✅ **Service Layer** - Business logic isolation
+- ✅ **Utility Modules** - Reusable helper functions
+- ✅ **ES6 JavaScript Modules** - Modern client-side architecture
+- ✅ **Environment Configuration** - Flexible deployment settings
+
+### Code Quality
+- ✅ **Separation of Concerns** - Clear module boundaries
+- ✅ **DRY Principles** - Reduced code duplication
+- ✅ **Error Handling** - Comprehensive logging
+- ✅ **Type Safety** - Input validation
+- ✅ **Maintainability** - Easier to extend and debug
+- ✅ **Manual Email Control** - Send emails only when you choose
+
+### Performance
+- ✅ **Lazy Loading** - Module-based JavaScript
+- ✅ **Background Processing** - Non-blocking operations
+- ✅ **Resource Cleanup** - Automatic file management
+
 ## 📞 Quick Reference
 
 - **Local URL:** http://localhost:5000
@@ -213,7 +315,17 @@ Visit `http://your-domain/health` to check application status
 - **Upload limit:** 50MB per file
 - **Supported formats:** CSV only
 - **File retention:** 24 hours (uploads)
+- **Main entry:** `python run.py`
+
+## 🔄 Running the Application
+
+To run the refactored application:
+
+1. Use `python run.py` as the main entry point
+2. Configure environment variables in `.env` file
+3. Access the application at http://localhost:5000
+4. All routes are now organized under blueprints
 
 ---
 
-**Your weekly display tracking system is now accessible from anywhere with an internet connection!** 🎉
+**Your weekly display tracking system has been refactored with modern architecture and best practices!** 🎉
