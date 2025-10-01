@@ -198,4 +198,4 @@ def import_contacts():
         return jsonify(result)
     except Exception as e:
         current_app.logger.error(f'Import contacts error: {e}')
-        return jsonify({'success': False, 'error': str(e)}'), 500
+        return jsonify({'success': False, 'error': str(e)}), 500

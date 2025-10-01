@@ -6,12 +6,7 @@
     <title>Shop Contacts Management - Display Tracking</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
-        .contacts-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
+        /* Custom styles specific to contacts page */
 
         .contacts-actions {
             display: flex;
@@ -302,19 +297,27 @@
 <body>
     <div class="container">
         <header class="header">
-            <div class="contacts-header">
-                <div>
-                    <h1>Shop Contacts Management</h1>
-                    <p>Manage store PICs and contact information</p>
-                </div>
-                <div class="contacts-actions">
-                    <a href="{{ url_for('dashboard') }}" class="btn btn--outline">← Back to Dashboard</a>
-                    <button class="btn btn--secondary" onclick="exportContacts()">📥 Export CSV</button>
-                    <button class="btn btn--secondary" onclick="showImportModal()">📤 Import CSV</button>
-                    <button class="btn btn--primary" onclick="showAddModal()">+ Add Contact</button>
-                </div>
-            </div>
+            <h1>📇 Shop Contacts Management</h1>
+            <p>Manage store PICs and contact information</p>
+            <nav class="header-nav">
+                <a href="{{ url_for('main.dashboard') }}" class="nav-link">Dashboard</a>
+                <a href="{{ url_for('contacts.contacts_page') }}" class="nav-link active">Contacts</a>
+                <a href="{{ url_for('main.history') }}" class="nav-link">History</a>
+                <a href="{{ url_for('main.filters') }}" class="nav-link">Filters</a>
+            </nav>
         </header>
+
+        <div class="contacts-header">
+            <div>
+                <h2>Contact Management</h2>
+                <p style="color: #666; margin-top: 5px;">Add, edit, and manage store contact information</p>
+            </div>
+            <div class="contacts-actions">
+                <button class="btn btn--secondary" onclick="exportContacts()">📥 Export CSV</button>
+                <button class="btn btn--secondary" onclick="showImportModal()">📤 Import CSV</button>
+                <button class="btn btn--primary" onclick="showAddModal()">+ Add Contact</button>
+            </div>
+        </div>
 
         <!-- Statistics -->
         <div class="stats-row">
@@ -480,7 +483,7 @@
             try {
                 showLoading();
 
-                const response = await fetch(`/api/contacts?active_only=${activeOnly}`);
+                const response = await fetch(`/api/contacts/all?active_only=${activeOnly}`);
                 const data = await response.json();
 
                 if (data.success) {
@@ -659,7 +662,7 @@
                     });
                 } else {
                     // Add new contact
-                    response = await fetch('/api/contacts', {
+                    response = await fetch('/api/contacts/add', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'

@@ -9,10 +9,22 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1>Upload Files</h1>
+            <h1>📁 Upload Files</h1>
             <p>Upload your CSV files for processing</p>
-            <a href="{{ url_for('dashboard') }}" class="btn btn--outline">← Back to Dashboard</a>
+            <nav class="header-nav">
+                <a href="{{ url_for('main.dashboard') }}" class="nav-link">Dashboard</a>
+                <a href="{{ url_for('contacts.contacts_page') }}" class="nav-link">Contacts</a>
+                <a href="{{ url_for('main.history') }}" class="nav-link">History</a>
+                <a href="{{ url_for('main.filters') }}" class="nav-link">Filters</a>
+            </nav>
         </header>
+
+        <div class="upload-header">
+            <div>
+                <h2>File Upload</h2>
+                <p style="color: #666; margin-top: 5px;">Upload your CSV files for data processing</p>
+            </div>
+        </div>
 
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}

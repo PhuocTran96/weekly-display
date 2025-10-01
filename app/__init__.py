@@ -37,11 +37,15 @@ def create_app(config_name='development'):
     from app.routes.upload import upload_bp
     from app.routes.process import process_bp
     from app.routes.contacts import contacts_bp
+    from app.routes.history import history_bp
+    from app.routes.filters import filters_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(upload_bp, url_prefix='/upload')
     app.register_blueprint(process_bp, url_prefix='/process')
     app.register_blueprint(contacts_bp, url_prefix='/api/contacts')
+    app.register_blueprint(history_bp, url_prefix='/api/history')
+    app.register_blueprint(filters_bp, url_prefix='/api/filters')
 
     # Register error handlers
     register_error_handlers(app)

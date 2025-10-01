@@ -11,7 +11,7 @@
         <header class="header">
             <h1>Processing Results</h1>
             <p>Week {{ week_num }} Display Tracking Results</p>
-            <a href="{{ url_for('dashboard') }}" class="btn btn--outline">← Back to Dashboard</a>
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn--outline">← Back to Dashboard</a>
         </header>
 
         {% if result and result.success %}
@@ -61,6 +61,17 @@
                        class="btn btn--secondary">Download Chart</a>
                 </div>
                 {% endif %}
+            </div>
+        </section>
+
+        <!-- Email Notification Section -->
+        <section class="email-notification-section">
+            <h2>Email Notifications</h2>
+            <div class="email-action-container">
+                <p>Send email notifications to PICs and management about display changes.</p>
+                <button id="sendEmailBtn" class="btn btn--primary">
+                    📧 Preview & Send Email Notifications
+                </button>
             </div>
         </section>
 
@@ -151,8 +162,14 @@
             </div>
         </section>
         {% endif %}
+
+        <!-- Email Preview Modal -->
+        {% include 'components/email_preview_modal.html' %}
+
+        <!-- Hidden week number for email modal -->
+        <input type="hidden" id="processWeekNum" value="{{ week_num }}">
     </div>
 
-    <script src="{{ url_for('static', filename='js/results.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/results.js') }}"></script>
 </body>
 </html>

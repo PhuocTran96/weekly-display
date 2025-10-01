@@ -7,6 +7,7 @@ import os
 import json
 import threading
 from datetime import datetime
+from app.services.job_storage import JobStorage
 
 
 def start_background_processing(job_id, raw_file_path, report_file_path, week_num, processing_jobs):
@@ -79,14 +80,58 @@ def process_data_background(job_id, raw_file_path, report_file_path, week_num, p
                 'summary': result['summary'],
                 'charts': charts_created
             }
+
+            # Save job to history
+            save_job_to_history(job_id, processing_jobs[job_id], week_num)
         else:
             processing_jobs[job_id]['status'] = 'failed'
             processing_jobs[job_id]['error'] = result['error']
+
+            # Save failed job to history
+            save_job_to_history(job_id, processing_jobs[job_id], week_num)
 
     except Exception as e:
         processing_jobs[job_id]['status'] = 'failed'
         processing_jobs[job_id]['error'] = str(e)
         print(f"Processing error for job {job_id}: {e}")
+
+        # Save failed job to history
+        try:
+            save_job_to_history(job_id, processing_jobs[job_id], week_num)
+        except:
+            pass  # Don't let history saving failure break the process
+
+
+def save_job_to_history(job_id, job_data, week_num):
+    """Save completed job to history storage"""
+    try:
+        job_storage = JobStorage()
+
+        # Prepare job data for storage
+        history_data = {
+            'job_id': job_id,
+            'week_num': week_num,
+            'timestamp': datetime.now().isoformat(),
+            'status': job_data.get('status'),
+            'progress': job_data.get('progress'),
+            'summary': job_data.get('result', {}).get('summary', {}),
+            'files': {
+                'report_file': job_data.get('result', {}).get('report_file'),
+                'alert_file': job_data.get('result', {}).get('alert_file'),
+                'increases_file': job_data.get('result', {}).get('increases_file'),
+                'decreases_file': job_data.get('result', {}).get('decreases_file')
+            },
+            'charts': job_data.get('result', {}).get('charts', {}),
+            'error': job_data.get('error')
+        }
+
+        # Save to storage
+        job_storage.save_job(job_id, history_data)
+        print(f"Saved job {job_id} to history")
+
+    except Exception as e:
+        print(f"Warning: Failed to save job to history: {e}")
+        # Don't raise - history saving failure shouldn't break the process
 
 
 def generate_charts(result, week_num):

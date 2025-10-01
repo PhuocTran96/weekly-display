@@ -3,7 +3,7 @@
 Main routes - Dashboard and download endpoints
 """
 
-from flask import Blueprint, render_template, send_file, jsonify, redirect, url_for, flash
+from flask import Blueprint, render_template, send_file, send_from_directory, jsonify, redirect, url_for, flash
 import os
 
 main_bp = Blueprint('main', __name__)
@@ -21,6 +21,18 @@ def dashboard():
         current_app.config['CHARTS_FOLDER']
     ])
     return render_template('dashboard.html')
+
+
+@main_bp.route('/history')
+def history():
+    """Processing history page"""
+    return render_template('history.html')
+
+
+@main_bp.route('/filters')
+def filters():
+    """Alert filters configuration page"""
+    return render_template('filters.html')
 
 
 @main_bp.route('/download/<filename>')
@@ -60,15 +72,23 @@ def serve_chart(chart_type, filename):
     from flask import current_app
 
     try:
-        file_path = os.path.join(current_app.config['CHARTS_FOLDER'], filename)
+        # Get absolute path to charts directory
+        charts_folder = current_app.config['CHARTS_FOLDER']
 
+        # If relative path, make it absolute from project root
+        if not os.path.isabs(charts_folder):
+            # Get project root (parent directory of app folder)
+            project_root = os.path.dirname(current_app.root_path)
+            charts_folder = os.path.join(project_root, charts_folder)
+
+        # Check if file exists
+        file_path = os.path.join(charts_folder, filename)
         if not os.path.exists(file_path):
-            if os.path.exists(filename):
-                file_path = filename
-            else:
-                return jsonify({'error': 'Chart not found'}), 404
+            current_app.logger.error(f'Chart file not found: {file_path}')
+            return jsonify({'error': f'Chart not found: {filename}'}), 404
 
-        return send_file(file_path)
+        # Use send_from_directory for better security and path handling
+        return send_from_directory(charts_folder, filename)
 
     except Exception as e:
         current_app.logger.error(f'Chart serving error: {e}')

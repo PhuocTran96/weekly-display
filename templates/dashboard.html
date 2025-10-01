@@ -10,11 +10,13 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1>Display Tracking Dashboard</h1>
+            <h1>🏠 Display Tracking Dashboard</h1>
             <p>Automate display data processing and track model performance changes</p>
             <nav class="header-nav">
-                <a href="{{ url_for('dashboard') }}" class="nav-link">Home</a>
-                <a href="{{ url_for('contacts_page') }}" class="nav-link">Manage Contacts</a>
+                <a href="{{ url_for('main.dashboard') }}" class="nav-link active">Home</a>
+                <a href="{{ url_for('contacts.contacts_page') }}" class="nav-link">Contacts</a>
+                <a href="{{ url_for('main.history') }}" class="nav-link">History</a>
+                <a href="{{ url_for('main.filters') }}" class="nav-link">Filters</a>
             </nav>
         </header>
 
@@ -242,6 +244,9 @@
         <input type="hidden" id="processWeekNum" name="week_num">
     </form>
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <!-- Email Preview Modal -->
+    {% include 'components/email_preview_modal.html' %}
+
+    <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

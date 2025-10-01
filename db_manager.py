@@ -68,6 +68,12 @@ class DatabaseManager:
             self.db.processing_history.create_index([('week_num', DESCENDING)])
             self.db.processing_history.create_index([('timestamp', DESCENDING)])
 
+            # Job history indexes
+            self.db.job_history.create_index([('job_id', ASCENDING)], unique=True)
+            self.db.job_history.create_index([('week_num', DESCENDING)])
+            self.db.job_history.create_index([('timestamp', DESCENDING)])
+            self.db.job_history.create_index([('status', ASCENDING)])
+
             self.logger.info("Database indexes created successfully")
 
         except Exception as e:

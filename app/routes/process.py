@@ -130,3 +130,65 @@ def send_emails():
             'success': False,
             'error': f'Failed to send emails: {str(e)}'
         }), 500
+
+
+@process_bp.route('/preview-email', methods=['POST'])
+def preview_email():
+    """Get email preview before sending"""
+    try:
+        data = request.get_json()
+        week_num = data.get('week_num')
+
+        if not week_num:
+            return jsonify({'error': 'Week number is required'}), 400
+
+        # Import email service
+        from app.services.email_service import EmailService
+
+        email_service = EmailService()
+        result = email_service.get_email_preview(int(week_num))
+
+        if result['success']:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+
+    except Exception as e:
+        current_app.logger.error(f'Email preview error: {e}')
+        return jsonify({
+            'success': False,
+            'error': f'Failed to generate email preview: {str(e)}'
+        }), 500
+
+
+@process_bp.route('/send-selective-emails', methods=['POST'])
+def send_selective_emails():
+    """Send emails to selected recipients only"""
+    try:
+        data = request.get_json()
+        week_num = data.get('week_num')
+        selected_recipients = data.get('selected_recipients', [])
+
+        if not week_num:
+            return jsonify({'error': 'Week number is required'}), 400
+
+        if not selected_recipients:
+            return jsonify({'error': 'No recipients selected'}), 400
+
+        # Import email service
+        from app.services.email_service import EmailService
+
+        email_service = EmailService()
+        result = email_service.send_selective_emails(int(week_num), selected_recipients)
+
+        if result['success']:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+
+    except Exception as e:
+        current_app.logger.error(f'Selective email sending error: {e}')
+        return jsonify({
+            'success': False,
+            'error': f'Failed to send selective emails: {str(e)}'
+        }), 500

@@ -400,6 +400,55 @@ class DisplayTracker:
             increases = model_summary[model_summary['Difference'] > 0].sort_values('Difference', ascending=False)
             decreases = model_summary[model_summary['Difference'] < 0].sort_values('Difference')
 
+            # Calculate summary statistics for boss emails
+            decrease_changes = changes_df[changes_df['Change_Type'] == 'Decrease']
+            stores_affected = decrease_changes['Store_name'].nunique() if not decrease_changes.empty else 0
+            total_decreases = int(decrease_changes['Difference'].sum()) if not decrease_changes.empty else 0
+
+            # Organize decreases by PIC for email preview
+            pic_decreases = {}
+            if not decrease_changes.empty:
+                try:
+                    contacts_df = load_shop_contacts()
+                    if not contacts_df.empty:
+                        # Group by store to get decreases per store
+                        stores = decrease_changes.groupby(['Elux_ID', 'Dealer_ID', 'Store_name', 'Channel'])
+
+                        for store_key, store_data in stores:
+                            elux_id, dealer_id, store_name, channel = store_key
+
+                            # Find PIC contact info
+                            contact = contacts_df[
+                                (contacts_df['Elux_ID'] == str(elux_id)) |
+                                (contacts_df['Store_name'] == str(store_name))
+                            ]
+
+                            if not contact.empty:
+                                pic_email = contact.iloc[0]['PIC_Email']
+                                pic_name = contact.iloc[0].get('PIC_Name', 'Store Manager')
+
+                                # Initialize PIC entry if not exists
+                                if pic_email not in pic_decreases:
+                                    pic_decreases[pic_email] = {
+                                        'pic_name': pic_name,
+                                        'stores': []
+                                    }
+
+                                # Add store data to this PIC
+                                store_info = {
+                                    'Elux_ID': elux_id,
+                                    'Dealer_ID': dealer_id,
+                                    'Store_name': store_name,
+                                    'Channel': channel
+                                }
+
+                                pic_decreases[pic_email]['stores'].append({
+                                    'store_info': store_info,
+                                    'decreases': store_data.to_dict('records')
+                                })
+                except Exception as e:
+                    self.logger.warning(f"Could not organize PIC decreases: {e}")
+
             alert_summary = {
                 'timestamp': datetime.now().isoformat(),
                 'total_models_tracked': len(model_summary),
@@ -410,7 +459,13 @@ class DisplayTracker:
                 'top_decreases': decreases.head(10).to_dict('records'),
                 'all_changes': changes_df.to_dict('records'),
                 'increases_df': increases,  # Full increases DataFrame
-                'decreases_df': decreases   # Full decreases DataFrame
+                'decreases_df': decreases,   # Full decreases DataFrame
+                'summary': {
+                    'stores_affected': stores_affected,
+                    'models_decreased': len(decreases),
+                    'total_decreases': abs(total_decreases)
+                },
+                'pic_decreases': pic_decreases  # Organized by PIC email for email preview
             }
 
             self.logger.info(f"Generated alerts: {len(changes)} total changes")

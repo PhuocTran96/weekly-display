@@ -1,0 +1,116 @@
+<!-- Email Preview Modal -->
+<div id="emailPreviewModal" class="modal-overlay" style="display: none;">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h2>📧 Email Preview - Week <span id="modalWeekNum"></span></h2>
+            <button class="modal-close" id="closeEmailModal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            <!-- Loading State -->
+            <div id="previewLoading" class="preview-loading">
+                <div class="loading-spinner"></div>
+                <p>Loading email preview...</p>
+            </div>
+
+            <!-- Preview Content -->
+            <div id="previewContent" style="display: none;">
+                <!-- Filter and Selection Controls -->
+                <div class="email-controls">
+                    <div class="control-group">
+                        <button class="btn btn--sm btn--outline" id="selectAllRecipients">Select All</button>
+                        <button class="btn btn--sm btn--outline" id="deselectAllRecipients">Deselect All</button>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Filter by Type:</label>
+                        <select id="recipientTypeFilter" class="form-control">
+                            <option value="all">All Recipients</option>
+                            <option value="pic">PICs Only</option>
+                            <option value="boss">Bosses Only</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <span id="selectedCount">0</span> of <span id="totalCount">0</span> recipients selected
+                    </div>
+                </div>
+
+                <!-- Recipient List -->
+                <div class="recipient-section">
+                    <h3>Recipients</h3>
+                    <div id="recipientList" class="recipient-list">
+                        <!-- Recipients will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Email Preview Tabs -->
+                <div class="preview-tabs">
+                    <button class="preview-tab active" data-tab="pic-preview">PIC Email Preview</button>
+                    <button class="preview-tab" data-tab="boss-preview">Boss Email Preview</button>
+                </div>
+
+                <!-- PIC Email Preview -->
+                <div id="pic-preview" class="preview-panel active">
+                    <div class="email-preview">
+                        <div class="preview-subject">
+                            <strong>Subject:</strong>
+                            <div id="picSubject" class="subject-text"></div>
+                        </div>
+                        <div class="preview-body">
+                            <strong>Email Body Preview (Sample):</strong>
+                            <div id="picBody" class="body-content"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Boss Email Preview -->
+                <div id="boss-preview" class="preview-panel">
+                    <div class="email-preview">
+                        <div class="preview-subject">
+                            <strong>Subject:</strong>
+                            <div id="bossSubject" class="subject-text"></div>
+                        </div>
+                        <div class="preview-body">
+                            <strong>Email Body Preview:</strong>
+                            <div id="bossBody" class="body-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="previewError" class="preview-error" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <p id="previewErrorMessage"></p>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn--outline" id="cancelEmailSend">Cancel</button>
+            <button class="btn btn--primary" id="sendSelectedEmails">
+                <span id="sendBtnText">Send to Selected Recipients</span>
+                <div class="loading-spinner hidden" id="sendLoadingSpinner"></div>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Email Sending Progress Modal -->
+<div id="emailProgressModal" class="modal-overlay" style="display: none;">
+    <div class="modal-container modal-sm">
+        <div class="modal-header">
+            <h3>Sending Emails</h3>
+        </div>
+        <div class="modal-body">
+            <div class="progress-info">
+                <div class="loading-spinner"></div>
+                <p id="progressMessage">Sending emails to selected recipients...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="emailProgressFill"></div>
+                </div>
+                <p id="progressCount"></p>
+            </div>
+        </div>
+    </div>
+</div>
