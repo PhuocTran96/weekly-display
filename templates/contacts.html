@@ -606,30 +606,35 @@
         }
 
         async function editContact(eluxId) {
+            console.log('Edit contact clicked for:', eluxId);
             try {
                 const response = await fetch(`/api/contacts/${eluxId}`);
+                console.log('Fetch response status:', response.status);
                 const data = await response.json();
+                console.log('Contact data:', data);
 
                 if (data.success) {
                     currentEditId = eluxId;
                     const contact = data.contact;
 
                     document.getElementById('modalTitle').textContent = 'Edit Contact';
-                    document.getElementById('elux_id').value = contact.elux_id;
+                    document.getElementById('elux_id').value = contact.elux_id || '';
                     document.getElementById('elux_id').readOnly = true;
-                    document.getElementById('dealer_id').value = contact.dealer_id;
-                    document.getElementById('store_name').value = contact.store_name;
-                    document.getElementById('channel').value = contact.channel;
-                    document.getElementById('pic_name').value = contact.pic_name;
-                    document.getElementById('pic_email').value = contact.pic_email;
+                    document.getElementById('dealer_id').value = contact.dealer_id || '';
+                    document.getElementById('store_name').value = contact.store_name || '';
+                    document.getElementById('channel').value = contact.channel || '';
+                    document.getElementById('pic_name').value = contact.pic_name || '';
+                    document.getElementById('pic_email').value = contact.pic_email || '';
                     document.getElementById('boss_cc').value = contact.boss_cc || 'No';
                     document.getElementById('active').checked = contact.active !== false;
 
+                    console.log('Opening modal with currentEditId:', currentEditId);
                     document.getElementById('contactModal').classList.add('active');
                 } else {
                     showNotification('Failed to load contact: ' + data.error, 'error');
                 }
             } catch (error) {
+                console.error('Edit contact error:', error);
                 showNotification('Error loading contact: ' + error.message, 'error');
             }
         }
@@ -648,11 +653,17 @@
                 active: document.getElementById('active').checked
             };
 
+            // Debug logging
+            console.log('Saving contact:', currentEditId ? 'UPDATE' : 'ADD');
+            console.log('Current Edit ID:', currentEditId);
+            console.log('Form Data:', formData);
+
             try {
                 let response;
 
                 if (currentEditId) {
                     // Update existing contact
+                    console.log(`Sending PUT to /api/contacts/${currentEditId}`);
                     response = await fetch(`/api/contacts/${currentEditId}`, {
                         method: 'PUT',
                         headers: {
@@ -662,6 +673,7 @@
                     });
                 } else {
                     // Add new contact
+                    console.log('Sending POST to /api/contacts/add');
                     response = await fetch('/api/contacts/add', {
                         method: 'POST',
                         headers: {
@@ -671,7 +683,9 @@
                     });
                 }
 
+                console.log('Response status:', response.status);
                 const data = await response.json();
+                console.log('Response data:', data);
 
                 if (data.success) {
                     showNotification(currentEditId ? 'Contact updated successfully!' : 'Contact added successfully!', 'success');
@@ -681,6 +695,7 @@
                     showNotification('Failed to save contact: ' + data.error, 'error');
                 }
             } catch (error) {
+                console.error('Save contact error:', error);
                 showNotification('Error saving contact: ' + error.message, 'error');
             }
         }

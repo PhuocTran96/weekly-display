@@ -43,16 +43,23 @@ def get_contact(elux_id):
     try:
         from db_manager import DatabaseManager
 
+        current_app.logger.info(f'Getting contact for Elux ID: {elux_id} (type: {type(elux_id)})')
+
         db = DatabaseManager()
         contact = db.get_contact_by_elux_id(elux_id)
         db.close()
 
+        current_app.logger.info(f'Contact found: {contact is not None}')
+        if contact:
+            current_app.logger.info(f'Contact data: {contact}')
+
         if contact:
             return jsonify({'success': True, 'contact': contact})
         else:
+            current_app.logger.warning(f'Contact not found for Elux ID: {elux_id}')
             return jsonify({'success': False, 'error': 'Contact not found'}), 404
     except Exception as e:
-        current_app.logger.error(f'Get contact error: {e}')
+        current_app.logger.error(f'Get contact error: {e}', exc_info=True)
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -87,9 +94,13 @@ def update_contact(elux_id):
         from db_manager import DatabaseManager
 
         data = request.get_json()
+        current_app.logger.info(f'Updating contact {elux_id} with data: {data}')
+
         db = DatabaseManager()
         result = db.update_contact(elux_id, data)
         db.close()
+
+        current_app.logger.info(f'Update result: {result}')
 
         if result['success']:
             return jsonify(result)
@@ -97,7 +108,7 @@ def update_contact(elux_id):
             status_code = 404 if 'not found' in result.get('error', '').lower() else 400
             return jsonify(result), status_code
     except Exception as e:
-        current_app.logger.error(f'Update contact error: {e}')
+        current_app.logger.error(f'Update contact error: {e}', exc_info=True)
         return jsonify({'success': False, 'error': str(e)}), 500
 
 

@@ -49,7 +49,7 @@ mkdir -p $APP_DIR
 cd $APP_DIR
 
 # If this is initial deployment and app files aren't here yet
-if [ ! -f "$APP_DIR/app.py" ]; then
+if [ ! -f "$APP_DIR/wsgi.py" ]; then
     print_warning "Application files not found. Please upload your files to $APP_DIR"
     print_warning "You can use: scp -r /local/path/to/weekly-display/* user@your-vps:$APP_DIR/"
     exit 1
@@ -93,7 +93,7 @@ User=$APP_USER
 Group=$APP_USER
 WorkingDirectory=$APP_DIR
 Environment=PATH=$APP_DIR/venv/bin
-ExecStart=$APP_DIR/venv/bin/gunicorn --bind 127.0.0.1:5000 --workers 2 --timeout 300 app:app
+ExecStart=$APP_DIR/venv/bin/gunicorn --bind 127.0.0.1:5000 --workers 4 --timeout 300 wsgi:app
 Restart=always
 RestartSec=3
 

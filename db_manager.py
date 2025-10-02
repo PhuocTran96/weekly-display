@@ -141,12 +141,29 @@ class DatabaseManager:
             Contact dictionary or None
         """
         try:
-            contact = self.db.shop_contacts.find_one({'elux_id': str(elux_id)})
+            # Convert to string and try different formats
+            elux_id_str = str(elux_id)
+            self.logger.info(f"Searching for contact with elux_id: '{elux_id_str}'")
+
+            # First try exact match
+            contact = self.db.shop_contacts.find_one({'elux_id': elux_id_str})
+
+            # If not found, try as integer (if it's numeric)
+            if not contact and elux_id_str.isdigit():
+                self.logger.info(f"Trying to find as integer: {int(elux_id_str)}")
+                contact = self.db.shop_contacts.find_one({'elux_id': int(elux_id_str)})
+
+            # If still not found, check what elux_ids exist
+            if not contact:
+                sample_contacts = list(self.db.shop_contacts.find().limit(5))
+                self.logger.warning(f"Contact not found. Sample elux_ids in DB: {[c.get('elux_id') for c in sample_contacts]}")
+
             if contact:
                 contact['_id'] = str(contact['_id'])
+                self.logger.info(f"Contact found: {contact.get('store_name')}")
             return contact
         except Exception as e:
-            self.logger.error(f"Error getting contact: {e}")
+            self.logger.error(f"Error getting contact: {e}", exc_info=True)
             return None
 
     def get_contact_by_store_name(self, store_name: str) -> Optional[Dict]:
@@ -210,9 +227,33 @@ class DatabaseManager:
             # Normalize field names
             normalized_data = self._normalize_contact_data(update_data)
 
-            # Update in database
+            # Try to find the contact with the correct type
+            elux_id_str = str(elux_id)
+            query = {'elux_id': elux_id_str}
+
+            # First check if contact exists as string
+            existing = self.db.shop_contacts.find_one(query)
+
+            # If not found as string, try as integer
+            if not existing and elux_id_str.isdigit():
+                query = {'elux_id': int(elux_id_str)}
+                existing = self.db.shop_contacts.find_one(query)
+
+            if not existing:
+                self.logger.warning(f"Contact not found for Elux ID: {elux_id}")
+                return {
+                    'success': False,
+                    'error': 'Contact not found'
+                }
+
+            # Ensure elux_id in update data matches the existing format
+            if isinstance(existing['elux_id'], int):
+                if 'elux_id' in normalized_data:
+                    normalized_data['elux_id'] = int(normalized_data['elux_id'])
+
+            # Update in database using the correct query format
             result = self.db.shop_contacts.update_one(
-                {'elux_id': str(elux_id)},
+                query,
                 {'$set': normalized_data}
             )
 
@@ -229,7 +270,7 @@ class DatabaseManager:
                 }
 
         except Exception as e:
-            self.logger.error(f"Error updating contact: {e}")
+            self.logger.error(f"Error updating contact: {e}", exc_info=True)
             return {
                 'success': False,
                 'error': str(e)
@@ -247,16 +288,34 @@ class DatabaseManager:
             Dictionary with operation result
         """
         try:
+            # Try to find the contact with the correct type
+            elux_id_str = str(elux_id)
+            query = {'elux_id': elux_id_str}
+
+            # First check if contact exists as string
+            existing = self.db.shop_contacts.find_one(query)
+
+            # If not found as string, try as integer
+            if not existing and elux_id_str.isdigit():
+                query = {'elux_id': int(elux_id_str)}
+                existing = self.db.shop_contacts.find_one(query)
+
+            if not existing:
+                return {
+                    'success': False,
+                    'error': 'Contact not found'
+                }
+
             if soft_delete:
                 # Soft delete - mark as inactive
                 result = self.db.shop_contacts.update_one(
-                    {'elux_id': str(elux_id)},
+                    query,
                     {'$set': {'active': False, 'updated_at': datetime.now()}}
                 )
                 action = 'deactivated'
             else:
                 # Hard delete
-                result = self.db.shop_contacts.delete_one({'elux_id': str(elux_id)})
+                result = self.db.shop_contacts.delete_one(query)
                 action = 'deleted'
 
             if result.matched_count > 0 or result.deleted_count > 0:
@@ -272,7 +331,7 @@ class DatabaseManager:
                 }
 
         except Exception as e:
-            self.logger.error(f"Error deleting contact: {e}")
+            self.logger.error(f"Error deleting contact: {e}", exc_info=True)
             return {
                 'success': False,
                 'error': str(e)
@@ -449,7 +508,12 @@ class DatabaseManager:
         normalized = {}
         for key, value in data.items():
             normalized_key = field_mapping.get(key, key.lower().replace(' ', '_'))
-            normalized[normalized_key] = value
+
+            # Convert numeric string fields to integers for consistency
+            if normalized_key in ['elux_id', 'dealer_id'] and isinstance(value, str) and value.isdigit():
+                normalized[normalized_key] = int(value)
+            else:
+                normalized[normalized_key] = value
 
         return normalized
 
