@@ -66,14 +66,15 @@ def download_file(filename):
         return jsonify({'error': f'Download failed: {str(e)}'}), 500
 
 
+@main_bp.route('/charts/<filename>')
 @main_bp.route('/charts/<chart_type>/<filename>')
-def serve_chart(chart_type, filename):
+def serve_chart(filename, chart_type=None):
     """Serve chart images"""
     from flask import current_app
 
     try:
         # Get absolute path to charts directory
-        charts_folder = current_app.config['CHARTS_FOLDER']
+        charts_folder = current_app.config.get('CHARTS_FOLDER', 'charts')
 
         # If relative path, make it absolute from project root
         if not os.path.isabs(charts_folder):
@@ -81,12 +82,15 @@ def serve_chart(chart_type, filename):
             project_root = os.path.dirname(current_app.root_path)
             charts_folder = os.path.join(project_root, charts_folder)
 
+        current_app.logger.info(f'Looking for chart in: {charts_folder}/{filename}')
+
         # Check if file exists
         file_path = os.path.join(charts_folder, filename)
         if not os.path.exists(file_path):
             current_app.logger.error(f'Chart file not found: {file_path}')
             return jsonify({'error': f'Chart not found: {filename}'}), 404
 
+        current_app.logger.info(f'Serving chart: {file_path}')
         # Use send_from_directory for better security and path handling
         return send_from_directory(charts_folder, filename)
 

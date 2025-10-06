@@ -341,17 +341,35 @@ export class HistoryManager {
             ${charts.increases || charts.decreases ? `
                 <div class="detail-section">
                     <h3>Charts Generated</h3>
-                    <div class="detail-grid">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
                         ${charts.increases ? `
-                            <div class="detail-item">
-                                <label>Increases Chart</label>
-                                <value>${charts.increases}</value>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                                <label style="display: block; margin-bottom: 10px; font-weight: 600;">Increases Chart</label>
+                                <img src="/charts/${charts.increases}"
+                                     alt="Increases Chart"
+                                     style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <div style="display: none; color: #666; padding: 20px;">
+                                    Chart image not available<br>
+                                    <a href="/charts/${charts.increases}" download style="color: #007bff; text-decoration: none;">
+                                        📥 Download ${charts.increases}
+                                    </a>
+                                </div>
                             </div>
                         ` : ''}
                         ${charts.decreases ? `
-                            <div class="detail-item">
-                                <label>Decreases Chart</label>
-                                <value>${charts.decreases}</value>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                                <label style="display: block; margin-bottom: 10px; font-weight: 600;">Decreases Chart</label>
+                                <img src="/charts/${charts.decreases}"
+                                     alt="Decreases Chart"
+                                     style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <div style="display: none; color: #666; padding: 20px;">
+                                    Chart image not available<br>
+                                    <a href="/charts/${charts.decreases}" download style="color: #007bff; text-decoration: none;">
+                                        📥 Download ${charts.decreases}
+                                    </a>
+                                </div>
                             </div>
                         ` : ''}
                     </div>
@@ -388,7 +406,9 @@ export class HistoryManager {
         }
 
         const downloadUrl = `/api/history/${jobId}/download/${fileType}`;
-        return `<a href="${downloadUrl}" style="color: #007bff; text-decoration: none; font-weight: 600;" download>
+        return `<a href="${downloadUrl}" style="color: #007bff; text-decoration: none; font-weight: 600;"
+                   onclick="return this.handleDownloadError ? this.handleDownloadError(event) : true"
+                   target="_blank">
             📥 ${filename}
         </a>`;
     }

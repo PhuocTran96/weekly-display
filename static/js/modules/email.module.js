@@ -160,11 +160,16 @@ export class EmailManager {
         return null;
     }
 
-    async showEmailPreview() {
+    async showEmailPreview(weekNum = null) {
         console.log('Email preview button clicked');
 
-        const weekNum = this.getWeekNum();
-        console.log('Week number detected:', weekNum);
+        // If week number is not provided as parameter, try to get it from the page
+        if (!weekNum) {
+            weekNum = this.getWeekNum();
+            console.log('Week number detected from page:', weekNum);
+        } else {
+            console.log('Week number provided as parameter:', weekNum);
+        }
 
         if (!weekNum) {
             console.error('Week number not found');

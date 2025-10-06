@@ -161,9 +161,10 @@ def resend_emails(job_id):
 
         # Resend email notifications
         if selected_recipients:
-            # Import the selective send function
-            from app.services.processor import send_selective_emails
-            result = send_selective_emails(week_num, selected_recipients)
+            # Use EmailService for selective sending
+            from app.services.email_service import EmailService
+            email_service = EmailService()
+            result = email_service.send_selective_emails(week_num, selected_recipients)
         else:
             # Send to all recipients
             result = send_email_notifications(week_num)
@@ -248,18 +249,21 @@ def download_file(job_id, file_type):
         job_id: Job identifier
         file_type: Type of file to download (report, alert, increases, decreases)
     """
+    from flask import current_app, abort, make_response
+
     try:
+        current_app.logger.info(f'Download request: job_id={job_id}, file_type={file_type}')
+
         # Get job data
         job_data = job_storage.get_job_by_id(job_id)
 
         if not job_data:
-            return jsonify({
-                'success': False,
-                'error': 'Job not found'
-            }), 404
+            current_app.logger.error(f'Job not found: {job_id}')
+            abort(404, description='Job not found')
 
         # Get files from job data
         files = job_data.get('files', {})
+        current_app.logger.info(f'Files in job data: {files}')
 
         # Map file type to file path
         file_mapping = {
@@ -270,24 +274,39 @@ def download_file(job_id, file_type):
         }
 
         filename = file_mapping.get(file_type)
+        current_app.logger.info(f'Filename for {file_type}: {filename}')
 
         if not filename:
-            return jsonify({
-                'success': False,
-                'error': f'File type "{file_type}" not found or not generated for this job'
-            }), 404
+            current_app.logger.error(f'File type "{file_type}" not found in job data')
+            abort(404, description=f'File type "{file_type}" not found or not generated for this job')
 
-        # Construct full file path
-        file_path = os.path.join('reports', filename)
+        # Construct full file path - get project root directory
+        # Go up from app/routes to project root
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        current_app.logger.info(f'Project root: {project_root}')
 
-        # Check if file exists
-        if not os.path.exists(file_path):
-            return jsonify({
-                'success': False,
-                'error': f'File not found: {filename}. It may have been deleted.'
-            }), 404
+        # Try multiple locations
+        possible_paths = [
+            os.path.join(project_root, 'reports', filename),  # Project root/reports
+            os.path.join(os.getcwd(), 'reports', filename),    # Current working directory
+            os.path.join('reports', filename),                 # Relative path
+            filename  # In case it's already a full path
+        ]
 
-        # Send file
+        file_path = None
+        for path in possible_paths:
+            current_app.logger.info(f'Checking path: {path}')
+            if os.path.exists(path):
+                file_path = os.path.abspath(path)  # Convert to absolute path
+                current_app.logger.info(f'File found at: {file_path}')
+                break
+
+        if not file_path:
+            current_app.logger.error(f'File not found in any location. Tried: {possible_paths}')
+            abort(404, description=f'File not found: {filename}. It may have been deleted or moved.')
+
+        # Send file with absolute path
+        current_app.logger.info(f'Sending file: {file_path}')
         return send_file(
             file_path,
             as_attachment=True,
@@ -295,7 +314,5 @@ def download_file(job_id, file_type):
         )
 
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        current_app.logger.error(f'Error downloading file: {str(e)}', exc_info=True)
+        abort(500, description=f'Error downloading file: {str(e)}')
