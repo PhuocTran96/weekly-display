@@ -760,7 +760,19 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    showNotification(`Import successful! Imported: ${data.imported}, Errors: ${data.errors}`, 'success');
+                    let message = `✅ Import Completed!\n\n`;
+                    message += `✓ Successfully imported: ${data.imported} contact(s)\n`;
+                    if (data.errors > 0) {
+                        message += `⚠ Errors: ${data.errors} contact(s) failed`;
+                        if (data.error_details && data.error_details.length > 0) {
+                            message += `\n\nFirst error: ${data.error_details[0].error}`;
+                        }
+                    } else {
+                        message += `✓ No errors!`;
+                    }
+
+                    alert(message);
+                    showNotification(`Import completed: ${data.imported} imported, ${data.errors} errors`, 'success');
                     closeImportModal();
                     loadContacts();
                 } else {

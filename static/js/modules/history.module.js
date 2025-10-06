@@ -321,19 +321,19 @@ export class HistoryManager {
                 <div class="detail-grid">
                     <div class="detail-item">
                         <label>Report File</label>
-                        <value>${files.report_file || 'N/A'}</value>
+                        <value>${this.renderFileLink(job.job_id, 'report', files.report_file)}</value>
                     </div>
                     <div class="detail-item">
                         <label>Alert File</label>
-                        <value>${files.alert_file || 'N/A'}</value>
+                        <value>${this.renderFileLink(job.job_id, 'alert', files.alert_file)}</value>
                     </div>
                     <div class="detail-item">
                         <label>Increases File</label>
-                        <value>${files.increases_file || 'N/A'}</value>
+                        <value>${this.renderFileLink(job.job_id, 'increases', files.increases_file)}</value>
                     </div>
                     <div class="detail-item">
                         <label>Decreases File</label>
-                        <value>${files.decreases_file || 'N/A'}</value>
+                        <value>${this.renderFileLink(job.job_id, 'decreases', files.decreases_file)}</value>
                     </div>
                 </div>
             </div>
@@ -380,28 +380,55 @@ export class HistoryManager {
     }
 
     /**
+     * Render a file download link or N/A if file doesn't exist
+     */
+    renderFileLink(jobId, fileType, filename) {
+        if (!filename) {
+            return 'N/A';
+        }
+
+        const downloadUrl = `/api/history/${jobId}/download/${fileType}`;
+        return `<a href="${downloadUrl}" style="color: #007bff; text-decoration: none; font-weight: 600;" download>
+            📥 ${filename}
+        </a>`;
+    }
+
+    /**
      * Resend emails for a job
      */
     async resendEmails(jobId, weekNum) {
-        if (!confirm(`Are you sure you want to resend email notifications for Week ${weekNum}?`)) {
-            return;
-        }
+        // Store the job ID for later use
+        this.currentResendJobId = jobId;
 
-        try {
-            const response = await fetch(`/api/history/${jobId}/resend-emails`, {
-                method: 'POST'
-            });
+        // Show email preview modal using the EmailManager
+        if (window.emailManager) {
+            // Set a flag so EmailManager knows we're in resend mode
+            window.emailManager.resendMode = true;
+            window.emailManager.resendJobId = jobId;
 
-            const data = await response.json();
-
-            if (data.success) {
-                alert(`Email notifications sent successfully!\n\nEmails sent: ${data.emails_sent || 0}`);
-            } else {
-                alert(`Failed to send emails: ${data.error}`);
+            await window.emailManager.showEmailPreview(weekNum);
+        } else {
+            // Fallback to direct send if EmailManager is not available
+            if (!confirm(`Are you sure you want to resend email notifications for Week ${weekNum}?`)) {
+                return;
             }
-        } catch (error) {
-            console.error('Error resending emails:', error);
-            alert(`Error: ${error.message}`);
+
+            try {
+                const response = await fetch(`/api/history/${jobId}/resend-emails`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`Email notifications sent successfully!\n\nEmails sent: ${data.emails_sent || 0}`);
+                } else {
+                    alert(`Failed to send emails: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error resending emails:', error);
+                alert(`Error: ${error.message}`);
+            }
         }
     }
 

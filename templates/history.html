@@ -418,12 +418,19 @@
         </div>
     </div>
 
+    <!-- Email Preview Modal -->
+    {% include 'components/email_preview_modal.html' %}
+
     <script type="module">
         import { HistoryManager } from '/static/js/modules/history.module.js';
+        import { EmailManager } from '/static/js/modules/email.module.js';
 
-        // Initialize history manager
+        // Initialize managers
         window.historyManager = new HistoryManager();
+        window.emailManager = new EmailManager();
+
         window.historyManager.init();
+        window.emailManager.init();
     </script>
 </body>
 </html>

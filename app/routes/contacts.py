@@ -169,12 +169,12 @@ def export_contacts():
             return jsonify({'success': False, 'error': 'No contacts to export'}), 404
 
         output = StringIO()
-        df.to_csv(output, index=False)
+        df.to_csv(output, index=False, encoding='utf-8')
         output.seek(0)
 
         return Response(
             output.getvalue(),
-            mimetype='text/csv',
+            mimetype='text/csv; charset=utf-8',
             headers={'Content-Disposition': 'attachment; filename=contacts_export.csv'}
         )
     except Exception as e:
@@ -199,7 +199,28 @@ def import_contacts():
         if not file.filename.endswith('.csv'):
             return jsonify({'success': False, 'error': 'Only CSV files allowed'}), 400
 
-        df = pd.read_csv(file)
+        # Try multiple encodings to handle different CSV formats
+        encodings = ['utf-8', 'utf-8-sig', 'latin1', 'iso-8859-1', 'cp1252']
+        df = None
+        last_error = None
+
+        for encoding in encodings:
+            try:
+                file.seek(0)  # Reset file pointer
+                df = pd.read_csv(file, encoding=encoding)
+                current_app.logger.info(f'Successfully read CSV with encoding: {encoding}')
+                break
+            except (UnicodeDecodeError, UnicodeError) as e:
+                last_error = e
+                current_app.logger.warning(f'Failed to read with {encoding}: {e}')
+                continue
+
+        if df is None:
+            return jsonify({
+                'success': False,
+                'error': f'Unable to decode CSV file. Please ensure it is saved as UTF-8. Last error: {str(last_error)}'
+            }), 400
+
         contacts_list = df.to_dict('records')
 
         db = DatabaseManager()

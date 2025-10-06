@@ -64,6 +64,7 @@ class JobStorage:
                 'files': {
                     'report_file': job_data.get('updated_report_file'),
                     'alert_file': job_data.get('alert_file'),
+                    'increases_file': job_data.get('increases_file'),
                     'decreases_file': job_data.get('decreases_file')
                 },
                 'created_at': datetime.now(),

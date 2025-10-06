@@ -6,7 +6,14 @@ export class EmailManager {
     constructor() {
         this.previewData = null;
         this.selectedRecipients = new Set();
+        this.resendMode = false;
+        this.resendJobId = null;
         this.initializeEventListeners();
+    }
+
+    init() {
+        // Public init method for external initialization
+        console.log('EmailManager initialized');
     }
 
     initializeEventListeners() {
@@ -374,20 +381,38 @@ export class EmailManager {
 
             const selectedArray = Array.from(this.selectedRecipients);
 
-            const response = await fetch('/process/send-selective-emails', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+            let endpoint, body;
+
+            // Check if we're in resend mode (from history page)
+            if (this.resendMode && this.resendJobId) {
+                endpoint = `/api/history/${this.resendJobId}/resend-emails`;
+                body = {
+                    selected_recipients: selectedArray
+                };
+            } else {
+                // Normal send mode (from dashboard)
+                endpoint = '/process/send-selective-emails';
+                body = {
                     week_num: weekNum,
                     selected_recipients: selectedArray
-                })
+                };
+            }
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
             });
 
             const result = await response.json();
 
             if (response.ok && result.success) {
-                this.showNotification(result.message, 'success');
+                this.showNotification(result.message || `Emails sent successfully! Sent: ${result.emails_sent || selectedArray.length}`, 'success');
                 this.closePreviewModal();
+
+                // Reset resend mode
+                this.resendMode = false;
+                this.resendJobId = null;
 
                 // Show detailed results if there were any errors
                 if (result.errors && result.errors.length > 0) {
