@@ -126,6 +126,10 @@ def resend_emails(job_id):
         - selected_recipients: List of email addresses to send to (if not provided, sends to all)
     """
     try:
+        from flask import current_app
+        current_app.logger.info(f'Resend emails request for job {job_id}')
+        current_app.logger.info(f'Content-Type: {request.content_type}')
+        current_app.logger.info(f'Request data: {request.data}')
         # Get job data
         job_data = job_storage.get_job_by_id(job_id)
 
@@ -151,7 +155,8 @@ def resend_emails(job_id):
             }), 400
 
         # Get selected recipients from request body (if any)
-        request_data = request.get_json() or {}
+        # Force JSON parsing even if Content-Type is not set correctly
+        request_data = request.get_json(force=True, silent=True) or {}
         selected_recipients = request_data.get('selected_recipients')
 
         # Resend email notifications

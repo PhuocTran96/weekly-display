@@ -55,18 +55,25 @@ class JobStorage:
         """
         try:
             # Create MongoDB document
+            # Support both old format (root level) and new format (nested files)
+            files_data = job_data.get('files', {})
+            if not files_data:
+                # Fallback to old format for backwards compatibility
+                files_data = {
+                    'report_file': job_data.get('updated_report_file'),
+                    'alert_file': job_data.get('alert_file'),
+                    'increases_file': job_data.get('increases_file'),
+                    'decreases_file': job_data.get('decreases_file')
+                }
+
             doc = {
                 'job_id': job_id,
                 'week_num': job_data.get('week_num'),
                 'timestamp': datetime.now(),
                 'status': job_data.get('status', 'processing'),
                 'summary': job_data.get('summary', {}),
-                'files': {
-                    'report_file': job_data.get('updated_report_file'),
-                    'alert_file': job_data.get('alert_file'),
-                    'increases_file': job_data.get('increases_file'),
-                    'decreases_file': job_data.get('decreases_file')
-                },
+                'files': files_data,
+                'charts': job_data.get('charts', {}),
                 'created_at': datetime.now(),
                 'updated_at': datetime.now()
             }
